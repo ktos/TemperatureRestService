@@ -6,9 +6,13 @@
 	
 	define('DEBUG', true);
 	
+	# list of sensors, in a form of prettyName => sensorId
 	$config['sensors'] = array(
 		'main' => '0000054d332a'
 	);
+	
+	# get not only by names, but also by ids?
+	$config['loose'] = true;
 	
 	function readTemperature($sensorId)
 	{
@@ -30,13 +34,13 @@
 	
 	$return = "Bad Request";
 	$returnCode = 400;
-	$returnObj = null;
+	$returnObj = null;	
 	if (array_key_exists('sensor', $_GET) && (!empty($_GET['sensor'])))
 	{
-		$requested = $_GET['sensor'];
+		$requested = $_GET['sensor'];		
 		
-		if (preg_match('/^[a-z0-9]$/', $requested) == 1)
-		{
+		if (preg_match('/^[a-z0-9]*$/', $requested) == 1)
+		{		
 			if (array_key_exists($requested, $config['sensors']))
 			{
 				$return = "OK";
@@ -63,7 +67,7 @@
 					}
 				}
 			}
-		}
+		}		
 	}
 	
 	header("$returnCode $return");
