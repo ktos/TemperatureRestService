@@ -18,17 +18,17 @@
 	/*
 	 * Reads temperature from a sensor of a given id
 	 *
-	 * @param string $sensorId
+	 * @param string $sensorName
 	 * @returns mixed Temperature in Celsius as a float or NULL if error occured
 	 */
-	function readTemperature($sensorId)
+	function readTemperature($sensorName)
 	{
 		if (DEBUG)
 			$f = "74 01 4b 46 7f ff 0c 10 55 : crc=55 YES
 74 01 4b 46 7f ff 0c 10 55 t=23250
 ";
 		else
-			$f = file_get_contents("/sys/bus/w1/devices/28-$sensorId/w1_slave");
+			$f = file_get_contents("/sys/bus/w1/devices/28-$sensorName/w1_slave");
 			
 		if ($f === false)
 			return false;
@@ -54,6 +54,21 @@
 		echo json_encode(array('code' => $httpCode, 'message' => $httpMessage, 'data' => $data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);
 		die();
 	}
+	
+	/**
+	 * Finds sensor name based on id
+	 *
+	 * @param int $sensorId
+	 * @returns mixed
+	 */
+	function findSensorName($sensorId)
+	{		
+		foreach ($config['sensors'] as $k => $v)
+			if ($v == $requested)
+				return $k;
+				
+		return null;
+	}
 		
 	if (array_key_exists('sensor', $_GET) && (!empty($_GET['sensor'])))
 	{
@@ -69,10 +84,7 @@
 			{									
 				if ($config['loose'] === true)
 				{
-					$s = null;
-					foreach ($config['sensors'] as $k => $v)
-						if ($v == $requested)
-							$s = $k;
+					$s = findSensorName($requested);
 				
 					if ($s !== null)
 					{
