@@ -4,16 +4,7 @@
 	 *
 	 */
 	
-	# is in debug mode?
-	define('DEBUG', true);
-	
-	# list of sensors, in a form of prettyName => sensorId
-	$config['sensors'] = array(
-		'main' => '0000054d332a'
-	);
-	
-	# get not only by names, but also by ids?
-	$config['loose'] = true;
+	require 'config.php';
 	
 	/*
 	 * Reads temperature from a sensor of a given id
