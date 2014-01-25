@@ -2,7 +2,7 @@
 	/**
 	 * Temperature Rest Service
 	 *
-	 */	
+	 */		
 	
 	require 'config.php';
 	
@@ -18,6 +18,9 @@
 		 */
 		public static function readTemperature($sensorName)
 		{
+			if ($sensorName === NULL)
+				return NULL;
+			
 			if (DEBUG)
 				$f = "74 01 4b 46 7f ff 0c 10 55 : crc=55 YES
 	74 01 4b 46 7f ff 0c 10 55 t=23250
@@ -26,7 +29,7 @@
 				$f = file_get_contents("/sys/bus/w1/devices/28-$sensorName/w1_slave");
 				
 			if ($f === false)
-				return null;
+				return NULL;
 				
 			$matches = array();
 			preg_match('/t=([0-9]{5})/', $f, $matches);
@@ -52,7 +55,7 @@
 						return $k;
 			}
 			
-			return null;
+			return NULL;
 		}
 		
 		public static function isSensorValid($sensorName)
@@ -77,27 +80,29 @@
 		private function plain()
 		{
 			header('Content-type: text/plain');
-			echo ($this->data === null)? $this->error : $this->data;
+			echo ($this->data === NULL)? $this->error : $this->data;
 		}
 		
 		private function json()
 		{
 			header('Content-type: application/json');
-			echo json_encode(array('data' => $this->data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);
+			echo json_encode(array('data' => $this->data, 'error' => $this->error), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);
 		}
 		
 		private function wns()
 		{
-			header('Content-type: application/xml');
-			$fdata = ($this->data === null)? $this->error : round((float)$this->data, 1) . ' °C';
+			date_default_timezone_set('UTC');
+			header('X-WNS-Expires: ' . date(DATE_RFC850, strtotime("+1 hour")));
+			header('Content-type: application/xml;encoding=utf-8');
+			$fdata = ($this->data === NULL)? $this->error : round((float)$this->data, 1) . ' °C';
 			$result = '<tile><visual><binding template="TileSquareText01"><text id="1">' . $fdata . '</text></binding></visual></tile>';
 			echo $result;
 		}
 		
-		public function send($httpCode, $httpMessage, $data = null)
+		public function send($httpCode, $httpMessage, $data)
 		{
 			$this->data = $data;
-			$this->error = ($httpCode !== 200)? $httpMessage : null;
+			$this->error = ($httpCode !== 200)? $httpMessage : NULL;
 			
 			header("HTTP/1.1 $httpCode $httpMessage");
 			header('X-Powered-By: TemperatureRestService/1.0');
@@ -109,9 +114,14 @@
 		}
 	}
 
-	if (!array_key_exists('format', $_GET) || (empty($_GET['format'])) || (!in_array($_GET['format'], $config['formats'])))
+	if (!array_key_exists('format', $_GET) || (empty($_GET['format'])))
 		$format = 'plain';
 	else {
+		if (!in_array($_GET['format'], $config['formats'])) {
+			$r = new Response('plain');
+			$r->send(400, 'Bad Request');
+		}
+		
 		$format = $_GET['format'];
 	}
 		
@@ -129,9 +139,16 @@
 	if (Sensor::isSensorValid($requested)) {
 		$s = Sensor::findSensorName($requested);
 		
-		if ($s !== null)
-			$r->send(200, 'OK', Sensor::readTemperature($s));
-		else {
+		if ($s !== NULL) {
+			$t = Sensor::readTemperature($s);			
+			
+			if ($t !== NULL) {					
+				$r->send(200, 'OK', $t);
+				
+			} else {				
+				$r->send(500, 'Internal Server Error');
+			}
+		} else {
 			$r->send(404, 'Not Found');
 		}
 	} else {
