@@ -2,98 +2,139 @@
 	/**
 	 * Temperature Rest Service
 	 *
-	 */
+	 */	
 	
 	require 'config.php';
 	
-	/*
-	 * Reads temperature from a sensor of a given id
-	 *
-	 * @param string $sensorName
-	 * @returns mixed Temperature in Celsius as a float or NULL if error occured
-	 */
-	function readTemperature($sensorName)
-	{
-		if (DEBUG)
-			$f = "74 01 4b 46 7f ff 0c 10 55 : crc=55 YES
-74 01 4b 46 7f ff 0c 10 55 t=23250
-";
-		else
-			$f = file_get_contents("/sys/bus/w1/devices/28-$sensorName/w1_slave");
-			
-		if ($f === false)
-			return null;
-			
-		$matches = array();
-		preg_match('/t=([0-9]{5})/', $f, $matches);
-		
-		return (int)$matches[1] / 1000;
-	}
+	$config['formats'] = array('json', 'plain', 'wns');
 	
-	/**
-	 * Sends response and finishes script
-	 *
-	 * @param int $httpCode
-	 * @param string $httpMessage
-	 * @param mixed $data
-	 */
-	function sendResponse($httpCode, $httpMessage, $data = null)
+	class Sensor
 	{
-		header("$httpCode $httpMessage");
-		header('X-Powered-By: TemperatureRestService');
-		
-		if (strstr($_SERVER["HTTP_ACCEPT"], "application/json")) {			
-			header('Content-type: application/json');
-			echo json_encode(array('code' => $httpCode, 'message' => $httpMessage, 'data' => $data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);			
-		} else {
-			header('Content-type: text/plain');
-			echo ($data === null)? $httpMessage : $data;
+		/*
+		 * Reads temperature from a sensor of a given id
+		 *
+		 * @param string $sensorName
+		 * @returns mixed Temperature in Celsius as a float or NULL if error occured
+		 */
+		public static function readTemperature($sensorName)
+		{
+			if (DEBUG)
+				$f = "74 01 4b 46 7f ff 0c 10 55 : crc=55 YES
+	74 01 4b 46 7f ff 0c 10 55 t=23250
+	";
+			else
+				$f = file_get_contents("/sys/bus/w1/devices/28-$sensorName/w1_slave");
+				
+			if ($f === false)
+				return null;
+				
+			$matches = array();
+			preg_match('/t=([0-9]{5})/', $f, $matches);
+			
+			return (int)$matches[1] / 1000;
 		}
 		
-		die();
+		/**
+		 * Finds sensor name based on id
+		 *
+		 * @param int $sensorId
+		 * @returns mixed
+		 */
+		public static function findSensorName($sensorId)
+		{
+			global $config;
+			
+			if (array_key_exists($sensorId, $config['sensors'])) {
+				return $config['sensors'][$sensorId];
+			} else if ($config['loose'] === TRUE) {
+				foreach ($config['sensors'] as $k => $v)
+					if ($v == $requested)
+						return $k;
+			}
+			
+			return null;
+		}
+		
+		public static function isSensorValid($sensorName)
+		{
+			global $config;
+			return (preg_match('/^[a-z0-9]*$/', $sensorName) == 1);
+		}
 	}
 	
-	/**
-	 * Finds sensor name based on id
-	 *
-	 * @param int $sensorId
-	 * @returns mixed
-	 */
-	function findSensorName($sensorId)
+	
+	class Response
 	{
-		foreach ($config['sensors'] as $k => $v)
-			if ($v == $requested)
-				return $k;
-	
-		return null;
+		private $data;
+		private $error;		
+		private $format;
+		
+		public function __construct($format)
+		{
+			$this->format = $format;
+		}
+				
+		private function plain()
+		{
+			header('Content-type: text/plain');
+			echo ($this->data === null)? $this->error : $this->data;
+		}
+		
+		private function json()
+		{
+			header('Content-type: application/json');
+			echo json_encode(array('data' => $this->data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);
+		}
+		
+		private function wns()
+		{
+			header('Content-type: application/xml');
+			$fdata = ($this->data === null)? $this->error : round((float)$this->data, 1) . ' °C';
+			$result = '<tile><visual><binding template="TileSquareText01"><text id="1">' . $fdata . '</text></binding></visual></tile>';
+			echo $result;
+		}
+		
+		public function send($httpCode, $httpMessage, $data = null)
+		{
+			$this->data = $data;
+			$this->error = ($httpCode !== 200)? $httpMessage : null;
+			
+			header("HTTP/1.1 $httpCode $httpMessage");
+			header('X-Powered-By: TemperatureRestService/1.0');
+			
+			$a = $this->format;
+			$this->$a();
+			
+			die();
+		}
 	}
+
+	if (!array_key_exists('format', $_GET) || (empty($_GET['format'])) || (!in_array($_GET['format'], $config['formats'])))
+		$format = 'plain';
+	else {
+		$format = $_GET['format'];
+	}
+		
+	$r = new Response($format);
 		
 	if ($_SERVER['REQUEST_METHOD'] !== 'GET')
-		sendResponse(400, 'Bad Request');	
+		$r->send(400, 'Bad Request');	
 		
 	if (!array_key_exists('sensor', $_GET) || (empty($_GET['sensor'])))
-		sendResponse(400, 'Bad Request');
+		$r->send(400, 'Bad Request');
 	
 	// id of the requested sensor
 	$requested = $_GET['sensor'];
 
-	// check if sensor id is valid
-	if (preg_match('/^[a-z0-9]*$/', $requested) == 1) {
-		if (array_key_exists($requested, $config['sensors'])) {
-			sendResponse(200, 'OK', readTemperature($requested));
+	if (Sensor::isSensorValid($requested)) {
+		$s = Sensor::findSensorName($requested);
+		
+		if ($s !== null)
+			$r->send(200, 'OK', Sensor::readTemperature($s));
+		else {
+			$r->send(404, 'Not Found');
 		}
-		else {									
-			if ($config['loose'] === true) {
-				$s = findSensorName($requested);
-
-				if ($s !== null) {
-					sendResponse(200, 'OK', readTemperature($s));
-				}
-			}
-			
-			sendResponse(404, 'Not Found');
-		}
-	} else {	
-		sendResponse(400, 'Bad Request');
+	} else {
+		$r->send(400, 'Bad Request');
 	}
 ?>
