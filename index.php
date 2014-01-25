@@ -31,7 +31,7 @@
 			$f = file_get_contents("/sys/bus/w1/devices/28-$sensorName/w1_slave");
 			
 		if ($f === false)
-			return false;
+			return null;
 			
 		$matches = array();
 		preg_match('/t=([0-9]{5})/', $f, $matches);
@@ -49,9 +49,16 @@
 	function sendResponse($httpCode, $httpMessage, $data = null)
 	{
 		header("$httpCode $httpMessage");
-		header('Content-type: application/json');
 		header('X-Powered-By: TemperatureRestService');
-		echo json_encode(array('code' => $httpCode, 'message' => $httpMessage, 'data' => $data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);
+		
+		if (strstr($_SERVER["HTTP_ACCEPT"], "application/json")) {			
+			header('Content-type: application/json');
+			echo json_encode(array('code' => $httpCode, 'message' => $httpMessage, 'data' => $data), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT);			
+		} else {
+			header('Content-type: text/plain');
+			echo ($data === null)? $httpMessage : $data;
+		}
+		
 		die();
 	}
 	
@@ -62,42 +69,40 @@
 	 * @returns mixed
 	 */
 	function findSensorName($sensorId)
-	{		
+	{
 		foreach ($config['sensors'] as $k => $v)
 			if ($v == $requested)
 				return $k;
-				
+	
 		return null;
 	}
 		
-	if (array_key_exists('sensor', $_GET) && (!empty($_GET['sensor'])))
-	{
-		$requested = $_GET['sensor'];		
+	if ($_SERVER['REQUEST_METHOD'] !== 'GET')
+		sendResponse(400, 'Bad Request');	
 		
-		if (preg_match('/^[a-z0-9]*$/', $requested) == 1)
-		{		
-			if (array_key_exists($requested, $config['sensors']))
-			{
-				sendResponse(200, 'OK', readTemperature($requested));
-			}
-			else
-			{									
-				if ($config['loose'] === true)
-				{
-					$s = findSensorName($requested);
-				
-					if ($s !== null)
-					{
-						sendResponse(200, 'OK', readTemperature($s));
-					}
-				}
-				
-				sendResponse(404, 'Not Found');
-			}
-		}		
-	}
-	sendResponse(400, 'Bad Request');
+	if (!array_key_exists('sensor', $_GET) || (empty($_GET['sensor'])))
+		sendResponse(400, 'Bad Request');
 	
-	
+	// id of the requested sensor
+	$requested = $_GET['sensor'];
 
+	// check if sensor id is valid
+	if (preg_match('/^[a-z0-9]*$/', $requested) == 1) {
+		if (array_key_exists($requested, $config['sensors'])) {
+			sendResponse(200, 'OK', readTemperature($requested));
+		}
+		else {									
+			if ($config['loose'] === true) {
+				$s = findSensorName($requested);
+
+				if ($s !== null) {
+					sendResponse(200, 'OK', readTemperature($s));
+				}
+			}
+			
+			sendResponse(404, 'Not Found');
+		}
+	} else {	
+		sendResponse(400, 'Bad Request');
+	}
 ?>
