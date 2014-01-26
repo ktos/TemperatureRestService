@@ -6,7 +6,7 @@
 	
 	require 'config.php';
 	
-	$config['formats'] = array('json', 'plain', 'wns');
+	$config['formats'] = array('json', 'txt', 'wns');
 	
 	class Sensor
 	{
@@ -77,7 +77,7 @@
 			$this->format = $format;
 		}
 				
-		private function plain()
+		private function txt()
 		{
 			header('Content-type: text/plain');
 			echo ($this->data === NULL)? $this->error : $this->data;
@@ -115,10 +115,10 @@
 	}
 
 	if (!array_key_exists('format', $_GET) || (empty($_GET['format'])))
-		$format = 'plain';
+		$format = 'txt';
 	else {
 		if (!in_array($_GET['format'], $config['formats'])) {
-			$r = new Response('plain');
+			$r = new Response('txt');
 			$r->send(400, 'Bad Request');
 		}
 		
