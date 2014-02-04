@@ -51,7 +51,7 @@
 				return $config['sensors'][$sensorId];
 			} else if ($config['loose'] === TRUE) {
 				foreach ($config['sensors'] as $k => $v)
-					if ($v == $requested)
+					if ($v == $sensorId)
 						return $k;
 			}
 			
