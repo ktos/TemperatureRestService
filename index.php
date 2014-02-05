@@ -2,9 +2,14 @@
 	/**
 	 * Temperature Rest Service
 	 *
-	 */		
+	 */			
 	
 	require 'config.php';
+	
+	if (DEBUG) {
+		error_reporting(E_ALL);
+		ini_set('display_errors', 1);
+	}
 	
 	$config['formats'] = array('json', 'txt', 'wns');
 	
@@ -21,7 +26,7 @@
 			if ($sensorName === NULL)
 				return NULL;
 			
-			if (DEBUG)
+			if (DEBUG && $sensorName == "test")
 				$f = "74 01 4b 46 7f ff 0c 10 55 : crc=55 YES
 	74 01 4b 46 7f ff 0c 10 55 t=23250
 	";
@@ -32,7 +37,7 @@
 				return NULL;
 				
 			$matches = array();
-			preg_match('/t=([0-9]{5})/', $f, $matches);
+			preg_match('/t=([0-9]+)/', $f, $matches);
 			
 			return (int)$matches[1] / 1000;
 		}
@@ -145,7 +150,7 @@
 			if ($t !== NULL) {					
 				$r->send(200, 'OK', $t);
 				
-			} else {				
+			} else {
 				$r->send(500, 'Internal Server Error');
 			}
 		} else {
