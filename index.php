@@ -100,13 +100,15 @@
 			header('X-WNS-Expires: ' . date(DATE_RFC850, strtotime("+1 hour")));
 			header('Content-type: application/xml;encoding=utf-8');
 			$fdata = ($this->data === NULL)? $this->error : round((float)$this->data, 1) . ' °C';
-			$result = '<tile><visual><binding template="TileSquareText01"><text id="1">' . $fdata . '</text></binding></visual></tile>';
+			$fsen = ($this->sensor === NULL)? '' : '<text id="2">' . $this->sensor . '</text>';
+			$result = '<tile><visual><binding template="TileSquareText01"><text id="1">' . $fdata . '</text>' . $fsen . '</binding></visual></tile>';
 			echo $result;
 		}
 		
-		public function send($httpCode, $httpMessage, $data)
+		public function send($httpCode, $httpMessage, $data = NULL, $sensor = null)
 		{
 			$this->data = $data;
+			$this->sensor = $sensor;
 			$this->error = ($httpCode !== 200)? $httpMessage : NULL;
 			
 			header("HTTP/1.1 $httpCode $httpMessage");
@@ -148,7 +150,7 @@
 			$t = Sensor::readTemperature($s);			
 			
 			if ($t !== NULL) {					
-				$r->send(200, 'OK', $t);
+				$r->send(200, 'OK', $t, $requested);
 				
 			} else {
 				$r->send(500, 'Internal Server Error');
