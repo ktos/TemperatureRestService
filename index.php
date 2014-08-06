@@ -52,7 +52,7 @@
 		Service::putSensor($sensor);
 	});
 	
-	// PUT: /exampleSensor
+	// POST: /exampleSensor
 	// Creates (or updates) sensor data with a name specified
 	on("POST", "/:sensor", function($sensor) {
 		Service::putSensor($sensor);

@@ -115,6 +115,7 @@
 				}
 			}			
 			$result['name'] = $sensorName;
+			$result['lastupdated'] = time();
 			
 			return $this->writeSensorData($result);
 		}

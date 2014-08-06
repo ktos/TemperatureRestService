@@ -1,7 +1,7 @@
 <?php
 	class Service
 	{
-		public static function putSensor($sensorName, $apikey = null)
+		public static function putSensor($sensorName)
 		{
 			$s = new Sensors();
 			
@@ -9,11 +9,11 @@
 			if (($sensorData === null) || (!array_key_exists('data', $sensorData)))
 				error(400, 'Bad request');						
 			
-			if ($apikey === null) {
+			if (!array_key_exists("HTTP_X_APIKEY", $_SERVER)) {
 				if ((!array_key_exists('apikey', $sensorData)) || ($sensorData['apikey'] != config('sensors.apikey')))
 					error(401, 'Unauthorized');
 			} else {
-				if (config('sensors.apikey') != $apikey)
+				if (config('sensors.apikey') != $_SERVER['HTTP_X_APIKEY'])
 					error(401, 'Unauthorized');
 			}
 			
@@ -33,7 +33,7 @@
 				$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
 				$format = $format->getValue();
 				$formatExt = Service::formatToExtension($format);
-				header('201 Created');
+				header('HTTP/1.1 201 Created');
 				render("error-$formatExt", array('code' => 201, 'message' => 'Created', 'message2' => 'Sensor data has been created (or updated) sucessfully.'), $format === 'text/html'? null : FALSE );
 				
 			}
@@ -46,8 +46,10 @@
 			$i = $s->getSensorInfo($sensorName);
 			
 			if ($i !== FALSE) {
-				if ((bool)$i['status'] === FALSE) {
-					error(500, 'Internal Server Error');
+				if (array_key_exists('status', $i)) {
+					if ((bool)$i['status'] === FALSE) {
+						error(500, 'Internal Server Error');
+					}
 				}
 				
 				header('Content-Type: ' . self::extensionToFormat($format));
