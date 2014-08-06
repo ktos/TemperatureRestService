@@ -1,7 +1,7 @@
 {
 	"data": <?= $data ?>,
 	"name": "<?= $name; ?>",
-	"type": "<?= $type; ?>",
+	"sensortype": "<?= $sensortype; ?>",
 	"id": "<?= $id; ?>",
 	"description": "<?= $description; ?>",
 	"lastupdated": "<?= date("c", $lastupdated); ?>",

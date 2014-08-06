@@ -74,7 +74,7 @@
 				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }
 				case 403: { $data = array('code' => 403, 'message' => 'Unathorized', 'message2' => 'You need to send proper APIKEY header to use this resource'); break; }
 				case 400: { $data = array('code' => 400, 'message' => 'Bad request', 'message2' => 'Only JSON-encoded data is supported, name and data are required parameters.'); break; }
-				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent apikey variable in your JSON data or the APIKEY is not valid.'); break; }
+				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent APIKEY variable in your JSON data or the APIKEY is not valid.'); break; }
 				
 				default: { error(500, 'Internal Server Error'); }
 			}
@@ -119,5 +119,6 @@
 	Service::$formatMap = array(
 		'text/html' => 'html',
 		'text/plain' => 'txt',
-		'application/json' => 'json'
+		'application/json' => 'json',
+		'application/xml' => 'wns'
 	);
