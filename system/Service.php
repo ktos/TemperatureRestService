@@ -53,6 +53,10 @@
 				}
 				
 				header('Content-Type: ' . self::extensionToFormat($format));
+				
+				if (file_exists("./system/$format.php"))
+					include "./system/$format.php";		// additional code fragments for specific response formats					
+				
 				if ($format === 'html')
 					render("data-$format", $i);
 				else {
