@@ -58,6 +58,17 @@
 		Service::putSensor($sensor);
 	});
 	
+	// POST: /
+	// Creates (or updates) sensor data with a name coming from a JSON array
+	on("POST", "/", function() {
+		$sensorData = json_decode(file_get_contents('php://input'), TRUE);
+			if (($sensorData === null) || (!array_key_exists('name', $sensorData)))
+				error(400, 'Bad request');		
+		
+		Service::putSensor($sensorData['name']);
+	});
+	
+	
 	// informational page, HTML format only
 	on('GET', '/', function() {
 		render('index');
