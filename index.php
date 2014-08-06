@@ -13,6 +13,7 @@
 	config('source', 'config.ini');	
 	
 	header('X-Powered-By: TemperatureRestService/2.0');
+
 	
 	error(500, function() {
 		$s = Service::showError(500);
@@ -20,6 +21,10 @@
 	
 	error(404, function() {
 		$s = Service::showError(404);
+	});
+	
+	error(403, function() {
+		$s = Service::showError(403);
 	});
 	
 	on("GET", "/:sensor/:format", function($sensor, $format) {				
@@ -44,7 +49,7 @@
 	
 	// handling everything, showing 404
 	on('*', '', function() {
-		error(404, "Not Found");
+		error(404, "File Not Found");
 	});
 	
 	dispatch();

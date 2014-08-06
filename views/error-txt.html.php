@@ -1,0 +1,2 @@
+<?= $code; ?> <?= $message; ?>
+<?= $message2; ?>

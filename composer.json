@@ -1,6 +1,7 @@
 {
   "require": {
     "php": ">= 5.4.0",    
-    "dispatch/dispatch": "dev-master"
+    "dispatch/dispatch": "dev-master",
+	"willdurand/negotiation": "@stable"
   }
 }
