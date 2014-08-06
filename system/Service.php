@@ -109,14 +109,8 @@
 			return Service::$formatMap[$format];
 		}
 		
-		public static function avaliableFormats() {
-			$r = array();
-			
-			foreach (Service::$formatMap as $key => $value) {
-				array_push($r, $key);				
-			}
-			
-			return $r;
+		public static function avaliableFormats() {			
+			return array_keys(Service::$formatMap);
 		}
 	}
 

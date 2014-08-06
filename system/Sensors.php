@@ -80,6 +80,8 @@
 		}
 		
 		private function writeSensorData($sensorData) {
+			unset($sensorData['apikey']);
+				
 			$file = '';
 			foreach ($sensorData as $key => $value) {
 				$file .= "$key: $value\n";				
