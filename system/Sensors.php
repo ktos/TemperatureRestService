@@ -6,7 +6,7 @@
 	 	 
 	class Sensors {
 	 
-	 	private function findSensor($sensorName) {
+	 	public function findSensor($sensorName) {
 	 		$dir = config('sensors.data');	 			
 	 		if (file_exists("$dir/$sensorName") && is_file("$dir/$sensorName")) {			
 				return "$dir/$sensorName";

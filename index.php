@@ -15,17 +15,11 @@
 	header('X-Powered-By: TemperatureRestService/2.0');
 
 	// error handlers
-	error(500, function() {
-		$s = Service::showError(500);
-	});
-	
-	error(404, function() {
-		$s = Service::showError(404);
-	});
-	
-	error(403, function() {
-		$s = Service::showError(403);
-	});
+	error(500, function() { Service::showError(500); });
+	error(404, function() { Service::showError(404); });
+	error(403, function() { Service::showError(403); });
+	error(400, function() { Service::showError(400); });
+	error(401, function() { Service::showError(401); });
 	
 	// GET: /exampleSensor/json
 	// Getting data from a sensor with a specified format
@@ -53,8 +47,14 @@
 	});
 	
 	// PUT: /exampleSensor
-	// Creates (or updates) sensor data
+	// Creates (or updates) sensor data with a name specified
 	on("PUT", "/:sensor", function($sensor) {
+		Service::putSensor($sensor);
+	});
+	
+	// PUT: /exampleSensor
+	// Creates (or updates) sensor data with a name specified
+	on("POST", "/:sensor", function($sensor) {
 		Service::putSensor($sensor);
 	});
 	

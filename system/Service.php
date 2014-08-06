@@ -1,6 +1,45 @@
 <?php
 	class Service
-	{				
+	{
+		public static function putSensor($sensorName, $apikey = null)
+		{
+			$s = new Sensors();
+			
+			$sensorData = json_decode(file_get_contents('php://input'), TRUE);
+			if (($sensorData === null) || (!array_key_exists('data', $sensorData)))
+				error(400, 'Bad request');						
+			
+			if ($apikey === null) {
+				if ((!array_key_exists('apikey', $sensorData)) || ($sensorData['apikey'] != config('sensors.apikey')))
+					error(401, 'Unauthorized');
+			} else {
+				if (config('sensors.apikey') != $apikey)
+					error(401, 'Unauthorized');
+			}
+			
+			$sensorData['name'] = $sensorName;
+			
+			if ($s->findSensor($sensorName))
+				$r = $s->updateSensor($sensorName, $sensorData);
+			else
+				$r = $s->createSensor($sensorData);
+			
+			if (!$r)
+				error(500, 'Internal Server Error');
+			else
+			{
+				$negotiator = new \Negotiation\FormatNegotiator();
+			
+				$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
+				$format = $format->getValue();
+				$formatExt = Service::formatToExtension($format);
+				header('201 Created');
+				render("error-$formatExt", array('code' => 201, 'message' => 'Created', 'message2' => 'Sensor data has been created (or updated) sucessfully.'), $format === 'text/html'? null : FALSE );
+				
+			}
+			
+		}		
+						
 		public static function getSensorData($sensorName, $format)
 		{
 			$s = new Sensors();
@@ -25,13 +64,15 @@
 		public static function showError($errorCode) {
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
-			$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], array('application/json', 'text/html', 'text/plain'));
+			$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
 			$formatExt = Service::formatToExtension($format->getValue());
 			
 			switch ($errorCode) {
 				case 500: { $data = array('code' => 500, 'message' => 'Internal Server Error', 'message2' => 'Something went wrong: there is application error or sensor data is marked as wrong.'); break; }
 				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }
 				case 403: { $data = array('code' => 403, 'message' => 'Unathorized', 'message2' => 'You need to send proper APIKEY header to use this resource'); break; }
+				case 400: { $data = array('code' => 400, 'message' => 'Bad request', 'message2' => 'Only JSON-encoded data is supported, name and data are required parameters.'); break; }
+				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent apikey variable in your JSON data or the APIKEY is not valid.'); break; }
 				
 				default: { error(500, 'Internal Server Error'); }
 			}
@@ -46,7 +87,7 @@
 		
 		public static $formatMap;
 		
-		private static function extensionToFormat($ext) {
+		public static function extensionToFormat($ext) {
 			foreach (Service::$formatMap as $key => $value) {
 				if ($value === $ext)
 					return $key;
@@ -55,7 +96,7 @@
 			return FALSE;
 		}
 		
-		private static function isExtension($ext) {
+		public static function isExtension($ext) {
 			foreach (Service::$formatMap as $key => $value) {
 				if ($value === $ext)
 					return TRUE;
@@ -64,8 +105,18 @@
 			return FALSE;
 		}
 		
-		private static function formatToExtension($format) {
+		public static function formatToExtension($format) {
 			return Service::$formatMap[$format];
+		}
+		
+		public static function avaliableFormats() {
+			$r = array();
+			
+			foreach (Service::$formatMap as $key => $value) {
+				array_push($r, $key);				
+			}
+			
+			return $r;
 		}
 	}
 
