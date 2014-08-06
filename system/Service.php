@@ -1,6 +1,25 @@
 <?php
+
+	/**
+	 * Class for handling most requests
+	 * 
+	 * This class handles requests and responses in the system, routed from dispatcher framework
+	 */
 	class Service
 	{
+		/**
+		 * Handles updating sensor information
+		 * 
+		 * This function checks if data sent to PUT/POST request is a valid JSON, if it have
+		 * proper required data set, and if user is authorized by sending proper APIKEY along
+		 * with request. If everything is true, it runs proper methods from Service class.
+		 * 
+		 * HTTP error 400 is returned if there is a problem with request, 401 if the APIKEY is
+		 * not set or is invalid and 500 if there was a problem saving data. 201 is served
+		 * if everything went fine.
+		 * 
+		 * @param string $sensorName Name of a sensor to be updated		 
+		 */
 		public static function putSensor($sensorName)
 		{
 			$s = new Sensors();
@@ -40,6 +59,17 @@
 			
 		}		
 						
+		/**
+		 * Handles requesting sensor data from a user
+		 * 
+		 * This function handles requesting data from a sensor in a format
+		 * user requested (text, json, html...). It will return 500 error
+		 * if sensor data is marked as invalid (status is false), 404 if
+		 * $sensorName was not found and 200 if everything was fine.
+		 * 
+		 * @param string $sensorName Name of a sensor to recover data
+		 * @param string $format A requested format of data. Not checked, must be in @see formatMap!
+		 */
 		public static function getSensorData($sensorName, $format)
 		{
 			$s = new Sensors();
@@ -67,6 +97,13 @@
 			}
 		}
 		
+		/**
+		 * Handles showing different kind of errors
+		 * 
+		 * This functions shows codes and messages if HTTP error must be served
+		 * 
+		 * @param int $errorCode Code error. Supported are 400, 401, 404 and 500.
+		 */
 		public static function showError($errorCode) {
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
@@ -75,8 +112,7 @@
 			
 			switch ($errorCode) {
 				case 500: { $data = array('code' => 500, 'message' => 'Internal Server Error', 'message2' => 'Something went wrong: there is application error or sensor data is marked as wrong.'); break; }
-				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }
-				case 403: { $data = array('code' => 403, 'message' => 'Unathorized', 'message2' => 'You need to send proper APIKEY header to use this resource'); break; }
+				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }				
 				case 400: { $data = array('code' => 400, 'message' => 'Bad request', 'message2' => 'Only JSON-encoded data is supported, name and data are required parameters.'); break; }
 				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent APIKEY variable in your JSON data or the APIKEY is not valid.'); break; }
 				
@@ -91,8 +127,17 @@
 			}
 		}
 		
+		/**
+		 * A map with every possible format supported in style of content-type/format extension
+		 */
 		public static $formatMap;
 		
+		/**
+		 * Returns format Content-Type associated with extension or FALSE if there is no such format
+		 * 
+		 * @param string $ext
+		 * @return string
+		 */
 		public static function extensionToFormat($ext) {
 			foreach (Service::$formatMap as $key => $value) {
 				if ($value === $ext)
@@ -102,6 +147,12 @@
 			return FALSE;
 		}
 		
+		/**
+		 * Checks if specified extension is in format map
+		 * 
+		 * @param string $ext
+		 * @return bool
+		 */
 		public static function isExtension($ext) {
 			foreach (Service::$formatMap as $key => $value) {
 				if ($value === $ext)
@@ -111,10 +162,21 @@
 			return FALSE;
 		}
 		
+		/**
+		 * Returns extension associated with specified content type
+		 * 
+		 * @param string $format
+		 * @return string
+		 */
 		public static function formatToExtension($format) {
 			return Service::$formatMap[$format];
 		}
 		
+		/**
+		 * Returns a list of all avaliable content-types
+		 * 
+		 * @return array
+		 */
 		public static function avaliableFormats() {			
 			return array_keys(Service::$formatMap);
 		}

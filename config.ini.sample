@@ -1,12 +1,7 @@
-<?php
-	# set up debug mode?
-	define('DEBUG', true);
-	
-	# list of sensors, in a form of name => id
-	$config['sensors'] = array(
-		'main' => '0000054d332a'
-	);
-	
-	# get not only by names, but also by ids?
-	$config['loose'] = true;
-?>
+; TemperatureRestService 2.0 configuration
+
+dispatch.url = "" ; full URL for application, so dispatcher can work
+dispatch.views = "./views" ; a folder where are views
+
+sensors.apikey = "abcdef" ; an APIKEY client must sent before data will be updated
+sensors.data = "./data" ; a folder where flat file about sensors are stored

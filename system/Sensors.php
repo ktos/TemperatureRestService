@@ -1,11 +1,18 @@
 <?php
 	/**
-	 * Temperature Rest Service
+	 * Sensors class, a model-type class for application
 	 *
-	 */
-	 	 
+	 * It is responsible for saving sensor data, in flat files,
+	 * as they are most simple solution.
+	 */	 	 
 	class Sensors {
 	 
+	 	/**
+		 * Finds sensor file for a sensor of specified name (or FALSE)
+		 * 
+		 * @param string $sensorName
+		 * @return string
+		 */
 	 	public function findSensor($sensorName) {
 	 		$dir = config('sensors.data');	 			
 	 		if (file_exists("$dir/$sensorName") && is_file("$dir/$sensorName")) {			
@@ -15,6 +22,12 @@
 			}
 	 	}
 	 
+	 	/**
+		 * Returns whole sensor file as an array
+		 * 
+		 * @param string $sensorName
+		 * @return array
+		 */
 	 	private function readSensor($sensorName) {
 	 		$fname = $this->findSensor($sensorName);
 	 		if ($fname !== FALSE) {
@@ -24,6 +37,13 @@
 			}
 	 	}
 		
+		/**
+		 * Returns value for only one field from a sensor file array
+		 * 
+		 * @param string $section
+		 * @param array $sensorData
+		 * @return string
+		 */
 		private function readSection($section, $sensorData) {
 			$matches = array();
 			for ($i = 0; $i < count($sensorData); $i++) {
@@ -35,6 +55,12 @@
 			return FALSE;
 		}
 	 
+	 	/**
+		 * Gets sensor data (reading) associated with a sensor
+		 * 
+		 * @param string $sensorName
+		 * @return mixed
+		 */
 		public function getSensorData($sensorName) {
 			$s = $this->readSensor($sensorName);
 			if ($s !== FALSE) {
@@ -53,6 +79,12 @@
 			}
 		}
 		
+		/**
+		 * Gets additional information about sensor as a associative arrray
+		 * 
+		 * @param string $sensorName
+		 * @return array
+		 */
 		public function getSensorInfo($sensorName) {
 			$sensorData = $this->readSensor($sensorName);
 			if ($sensorData === FALSE)
@@ -79,6 +111,12 @@
 			return $result;
 		}
 		
+		/**
+		 * Writes data for a sensor into file
+		 * 
+		 * @param array $sensorData
+		 * @return bool Returns if write succeeded
+		 */
 		private function writeSensorData($sensorData) {
 			unset($sensorData['apikey']);
 				
@@ -90,6 +128,13 @@
 			return (file_put_contents(config('sensors.data') . "/$sensorData[name]", $file) !== FALSE);
 		}
 		
+		/**
+		 * Creates a new sensor file and saves data to it. File name will
+		 * be based on $sensorData['name'] field.
+		 * 
+		 * @param array $sensorData
+		 * @return bool
+		 */
 		public function createSensor($sensorData) {
 			if ($this->findSensor($sensorData['name']))
 				return FALSE;
@@ -97,6 +142,13 @@
 			return $this->writeSensorData($sensorData);
 		}
 		
+		/**
+		 * Updates a sensor file with data from a new sensorData array
+		 * 
+		 * @param string $sensorName
+		 * @param array $sensorData
+		 * @return bool
+		 */
 		public function updateSensor($sensorName, $sensorData) {
 			$sensorDataOld = $this->readSensor($sensorName);
 			if ($sensorDataOld === FALSE)
