@@ -15,8 +15,8 @@
 		 */
 	 	public function findSensor($sensorName) {
 	 		$dir = config('sensors.data');	 			
-	 		if (file_exists("$dir/$sensorName") && is_file("$dir/$sensorName")) {			
-				return "$dir/$sensorName";
+	 		if (file_exists("$dir/$sensorName.json") && is_file("$dir/$sensorName.json")) {			
+				return "$dir/$sensorName.json";
 			} else {
 				return FALSE;
 			}
@@ -31,29 +31,12 @@
 	 	private function readSensor($sensorName) {
 	 		$fname = $this->findSensor($sensorName);
 	 		if ($fname !== FALSE) {
-	 			return file($fname);				
+	 			$j = json_decode(file_get_contents($fname), TRUE);
+				return ($j === null)? FALSE : $j;
 	 		} else {
 				return FALSE;
 			}
 	 	}
-		
-		/**
-		 * Returns value for only one field from a sensor file array
-		 * 
-		 * @param string $section
-		 * @param array $sensorData
-		 * @return string
-		 */
-		private function readSection($section, $sensorData) {
-			$matches = array();
-			for ($i = 0; $i < count($sensorData); $i++) {
-				if (preg_match("/$section: (.*)/", $sensorData[$i], $matches) === 1) {					
-					return $matches[1];
-				}
-			}
-			
-			return FALSE;
-		}
 	 
 	 	/**
 		 * Gets sensor data (reading) associated with a sensor
@@ -64,13 +47,16 @@
 		public function getSensorData($sensorName) {
 			$s = $this->readSensor($sensorName);
 			if ($s !== FALSE) {
-				$data = $this->readSection("data", $s);
-				$datatype = $this->readSection('datatype', $s);
+				$data = $s['data'];
 				
-				switch ($datatype) {
-					case 'float': { $data = (float)$data; break; }
-					case 'int': { $data = (int)$data; break; }
-					default: { $data = (string)$data; break; }			
+				if (array_key_exists('datatype', $s)) {
+					$datatype = $this->readSection('datatype', $s);
+					
+					switch ($datatype) {
+						case 'float': { $data = (float)$data; break; }
+						case 'int': { $data = (int)$data; break; }
+						default: { $data = (string)$data; break; }			
+					}
 				}
 				
 				return $data;
@@ -86,27 +72,11 @@
 		 * @return array
 		 */
 		public function getSensorInfo($sensorName) {
-			$sensorData = $this->readSensor($sensorName);
-			if ($sensorData === FALSE)
+			$result = $this->readSensor($sensorName);
+			if ($result === FALSE)
 				return FALSE;
-			
-			$matches = array();
-			for ($i = 0; $i < count($sensorData); $i++) {
-				if (preg_match("/([a-z]+)\: (.*)/", $sensorData[$i], $matches) === 1) {
-					$result[$matches[1]] = $matches[2];
-				}
-			}
-			
+
 			$result['name'] = $sensorName;
-			
-			/*
-			$result['name'] = $this->;
-			$result['data'] = '';
-			$result['type'] = '';
-			$result['id'] = '';
-			$result['description'] = '';
-			$result['lastupdated'] = '';
-			$result['status'] = '';*/
 			
 			return $result;
 		}
@@ -120,12 +90,9 @@
 		private function writeSensorData($sensorData) {
 			unset($sensorData['apikey']);
 				
-			$file = '';
-			foreach ($sensorData as $key => $value) {
-				$file .= "$key: $value\n";				
-			}
+			$file = json_encode($sensorData, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT);
 			
-			return (file_put_contents(config('sensors.data') . "/$sensorData[name]", $file) !== FALSE);
+			return (file_put_contents(config('sensors.data') . "/$sensorData[name].json", $file) !== FALSE);
 		}
 		
 		/**
@@ -156,20 +123,14 @@
 			
 			$result = array();
 			
-			$matches = array();
-			for ($i = 0; $i < count($sensorDataOld); $i++) {
-				if (preg_match("/([a-z]+)\: (.*)/", $sensorDataOld[$i], $matches) === 1) {
-					if (array_key_exists($matches[1], $sensorData)) {
-						$result[$matches[1]] = $sensorData[$matches[1]];
-					} else {
-						$result[$matches[1]] = $matches[2];
-					}
-				}
-			}			
-			$result['name'] = $sensorName;
-			$result['lastupdated'] = time();
+			foreach ($sensorData as $key => $value) {
+				$sensorDataOld[$key] = $value;
+			}
 			
-			return $this->writeSensorData($result);
+			$sensorDataOld['name'] = $sensorName;
+			$sensorDataOld['lastupdated'] = time();
+			
+			return $this->writeSensorData($sensorDataOld);
 		}
 	
 	}
