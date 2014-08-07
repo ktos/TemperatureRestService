@@ -73,7 +73,7 @@
 		public static function getSensorData($sensorName, $format)
 		{
 			$s = new Sensors();
-			$i = $s->getSensorInfo($sensorName);
+			$i = $s->getSensorData($sensorName);
 			
 			if ($i !== FALSE) {
 				if (array_key_exists('status', $i)) {

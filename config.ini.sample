@@ -5,3 +5,8 @@ dispatch.views = "./views" ; a folder where are views
 
 sensors.apikey = "abcdef" ; an APIKEY client must sent before data will be updated
 sensors.data = "./data" ; a folder where flat file about sensors are stored
+
+sensors.pull.allowcmd = false ; should we allow running whatever is in "pull" field as a shell_exec?
+sensors.pull.interval = 1800 ; interval (in seconds) how much must be difference between lastupdated and current time to execute pull command/url
+; pull will be disabled if not set
+sensors.pull.sleepafter = 1 ; how many seconds script should wait after pulling sensor to read it's data again

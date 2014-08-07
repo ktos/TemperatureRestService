@@ -39,47 +39,62 @@
 	 	}
 	 
 	 	/**
-		 * Gets sensor data (reading) associated with a sensor
-		 * 
-		 * @param string $sensorName
-		 * @return mixed
-		 */
-		public function getSensorData($sensorName) {
-			$s = $this->readSensor($sensorName);
-			if ($s !== FALSE) {
-				$data = $s['data'];
-				
-				if (array_key_exists('datatype', $s)) {
-					$datatype = $this->readSection('datatype', $s);
-					
-					switch ($datatype) {
-						case 'float': { $data = (float)$data; break; }
-						case 'int': { $data = (int)$data; break; }
-						default: { $data = (string)$data; break; }			
-					}
-				}
-				
-				return $data;
-			} else {
-				return FALSE;
-			}
-		}
-		
-		/**
-		 * Gets additional information about sensor as a associative arrray
+		 * Gets all sensor information
 		 * 
 		 * @param string $sensorName
 		 * @return array
 		 */
-		public function getSensorInfo($sensorName) {
-			$result = $this->readSensor($sensorName);
-			if ($result === FALSE)
+		public function getSensorData($sensorName) {
+			$s = $this->readSensor($sensorName);
+			if ($s !== FALSE) {								
+				// if there is "pull" parameter specified, run pull logic
+				if (array_key_exists('pull', $s)) {					
+					$int = config('sensors.pull.interval');
+					$lastup = array_key_exists('lastupdated', $s)? (int)$s['lastupdated'] : time();
+					
+					if (($int !== null) && (time() - $lastup > $int)) {						
+						if (filter_var($s['pull'], FILTER_VALIDATE_URL) !== FALSE) {
+							
+							$curl = curl_init();
+							curl_setopt_array($curl, array(
+							    CURLOPT_TIMEOUT => 10,
+							    CURLOPT_URL => $s['pull'],
+							    CURLOPT_USERAGENT => TEMPERATURERESTSERVICE,
+							    CURLOPT_RETURNTRANSFER => 1
+							));
+							$x = curl_exec($curl);
+							curl_close($curl);
+						} else {							
+							// running whatever is in "pull" as shell command, if is this allowed in config
+							if ((bool)config('sensors.pull.allowcmd') === TRUE)								
+								shell_exec($s['pull']);
+						}
+						
+						// if was "pull", update sensor data from file, but first wait
+						// a bit
+						sleep(config('sensors.pull.sleepafter') === null? 1 : config('sensors.pull.sleepafter'));
+						$s = $this->readSensor($sensorName);
+							if ($s === FALSE)
+								return FALSE;	
+					}
+				}
+				
+				// if there is datatype specified, convert data to proper data type
+				if (array_key_exists('datatype', $s)) {
+					$datatype = $this->readSection('datatype', $s);
+					
+					switch ($datatype) {
+						case 'float': { $s['data'] = (float)$s['data']; break; }
+						case 'int': { $s['data'] = (int)$s['data']; break; }
+						default: { $s['data'] = (string)$s['data']; break; }			
+					}
+				}
+				
+				return $s;
+			} else {
 				return FALSE;
-
-			$result['name'] = $sensorName;
-			
-			return $result;
-		}
+			}
+		}	
 		
 		/**
 		 * Writes data for a sensor into file

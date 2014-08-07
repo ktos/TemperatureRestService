@@ -39,7 +39,9 @@
 	require '/system/Service.php';
 	config('source', 'config.ini');	
 	
-	header('X-Powered-By: TemperatureRestService/2.0');
+	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.0');
+	
+	header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
 
 	// error handlers
 	error(500, function() { Service::showError(500); });
@@ -50,8 +52,8 @@
 	
 	// GET: /exampleSensor/json
 	// Getting data from a sensor with a specified format
-	on("GET", "/:sensor/:format", function($sensor, $format) {				
-		Service::getSensorData($sensor, $format);		
+	on("GET", "/:sensor/:format", function($sensor, $format) {
+		Service::getSensorData($sensor, $format);
 	});
 	
 	// GET: /exampleSensor.json
@@ -66,7 +68,7 @@
 		} else {
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
-			$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());			
+			$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
 			$format = Service::formatToExtension($format->getValue());
 		}		
 		
