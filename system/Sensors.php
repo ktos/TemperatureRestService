@@ -80,10 +80,8 @@
 				}
 				
 				// if there is datatype specified, convert data to proper data type
-				if (array_key_exists('datatype', $s)) {
-					$datatype = $this->readSection('datatype', $s);
-					
-					switch ($datatype) {
+				if (array_key_exists('datatype', $s)) {					
+					switch ($s['datatype']) {
 						case 'float': { $s['data'] = (float)$s['data']; break; }
 						case 'int': { $s['data'] = (int)$s['data']; break; }
 						default: { $s['data'] = (string)$s['data']; break; }			
