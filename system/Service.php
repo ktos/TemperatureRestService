@@ -49,8 +49,16 @@
 			{
 				$negotiator = new \Negotiation\FormatNegotiator();
 			
-				$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
-				$format = $format->getValue();
+				if (array_key_exists("HTTP_ACCEPT", $_SERVER))
+				{
+					$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
+					$format = $format->getValue();
+				} 
+				else
+				{
+					$format = "text/plain";
+				}
+				
 				$formatExt = Service::formatToExtension($format);
 				header('HTTP/1.1 201 Created');
 				render("error-$formatExt", array('code' => 201, 'message' => 'Created', 'message2' => 'Sensor data has been created (or updated) sucessfully.'), $format === 'text/html'? null : FALSE );
