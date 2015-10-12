@@ -115,8 +115,17 @@
 		public static function showError($errorCode) {
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
-			$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
-			$formatExt = Service::formatToExtension($format->getValue());
+			if (array_key_exists("HTTP_ACCEPT", $_SERVER))
+			{
+				$format = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], Service::avaliableFormats());
+				$format = $format->getValue();
+			} 
+			else
+			{
+				$format = "text/plain";
+			}
+			
+			$formatExt = Service::formatToExtension($format);
 			
 			switch ($errorCode) {
 				case 500: { $data = array('code' => 500, 'message' => 'Internal Server Error', 'message2' => 'Something went wrong: there is application error or sensor data is marked as wrong.'); break; }
@@ -127,7 +136,7 @@
 				default: { error(500, 'Internal Server Error'); }
 			}
 			
-			header('Content-Type: ' . $format->getValue());
+			header('Content-Type: ' . $format);
 			if ($formatExt === 'html')
 				render("error-$formatExt", $data);
 			else {
