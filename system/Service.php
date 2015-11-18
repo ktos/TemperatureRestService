@@ -92,13 +92,24 @@
 				
 				header('Content-Type: ' . self::extensionToFormat($format));
 				
+				// additional code fragments for specific response formats
+				// like WNS which requires additional headers sent
 				if (file_exists("./system/$format.php"))
-					include "./system/$format.php";		// additional code fragments for specific response formats					
+					include "./system/$format.php";							
+				
+				// handling sensortype-specific view formats
+				$view = "data-$format";								
+				if (array_key_exists("sensortype", $i)) {
+					$st = $i['sensortype'];
+					
+					if (file_exists(config('dispatch.views') . "$st-$format.html.php"))
+						$view = "$st-$format";	
+				}				
 				
 				if ($format === 'html')
-					render("data-$format", $i);
+					render($view, $i);
 				else {
-					render("data-$format", $i, FALSE);
+					render($view, $i, FALSE);
 				}
 			} else {
 				error(404, 'Not found');
