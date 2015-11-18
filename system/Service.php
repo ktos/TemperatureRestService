@@ -102,9 +102,17 @@
 				if (array_key_exists("sensortype", $i)) {
 					$st = $i['sensortype'];
 					
-					if (file_exists(config('dispatch.views') . "/by-type/$st-$format.html.php"))
-						$view = "by-type/$st-$format";
-				}				
+					if (file_exists(config('dispatch.views') . "/type/$st-$format.html.php"))
+						$view = "type/$st-$format";
+				}
+				
+				// handling sensor-specific view formats
+				if (array_key_exists("name", $i)) {
+					$sn = $i['name'];
+					
+					if (file_exists(config('dispatch.views') . "/name/$sn-$format.html.php"))
+						$view = "name/$sn-$format";
+				}
 				
 				if ($format === 'html')
 					render($view, $i);
