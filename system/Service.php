@@ -102,8 +102,8 @@
 				if (array_key_exists("sensortype", $i)) {
 					$st = $i['sensortype'];
 					
-					if (file_exists(config('dispatch.views') . "$st-$format.html.php"))
-						$view = "$st-$format";	
+					if (file_exists(config('dispatch.views') . "/by-type/$st-$format.html.php"))
+						$view = "by-type/$st-$format";
 				}				
 				
 				if ($format === 'html')
