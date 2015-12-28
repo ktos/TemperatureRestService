@@ -39,7 +39,7 @@
 	require 'system/Service.php';
 	config('source', 'config.ini');	
 	
-	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.0');
+	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.1');
 	
 	header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
 
@@ -49,6 +49,7 @@
 	error(403, function() { Service::showError(403); });
 	error(400, function() { Service::showError(400); });
 	error(401, function() { Service::showError(401); });
+    error(406, function() { Service::showError(406); });
 	
 	// GET: /exampleSensor/json
 	// Getting data from a sensor with a specified format

@@ -79,7 +79,7 @@
 		 * @param string $format A requested format of data. Not checked, must be in @see formatMap!
 		 */
 		public static function getSensorData($sensorName, $format)
-		{
+		{           
 			$s = new Sensors();
 			$i = $s->getSensorData($sensorName);
 			
@@ -89,6 +89,9 @@
 						error(500, 'Internal Server Error');
 					}
 				}
+                                
+                if (!in_array($format, self::availableFormatsExtensions()))
+                    error(406, 'Not Acceptable');                
 				
 				header('Content-Type: ' . self::extensionToFormat($format));
 				
@@ -112,7 +115,7 @@
 					
 					if (file_exists(config('dispatch.views') . "/name/$sn-$format.html.php"))
 						$view = "name/$sn-$format";
-				}
+				}                               
 				
 				if ($format === 'html')
 					render($view, $i);
@@ -151,7 +154,8 @@
 				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }				
 				case 400: { $data = array('code' => 400, 'message' => 'Bad request', 'message2' => 'Only JSON-encoded data is supported, name and data are required parameters.'); break; }
 				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent APIKEY variable in your JSON data or the APIKEY is not valid.'); break; }
-				
+				case 406: { $data = array('code' => 406, 'message' => 'Not Acceptable', 'message2' => 'There is no data in format requested.'); break; }
+                
 				default: { error(500, 'Internal Server Error'); }
 			}
 			
@@ -216,6 +220,15 @@
 		public static function avaliableFormats() {			
 			return array_keys(Service::$formatMap);
 		}
+        
+        /**
+         * Returns a list of all available available extensions
+         *
+         * @return array
+         */
+        public static function availableFormatsExtensions() {
+            return array_values(Service::$formatMap);
+        }
 	}
 
 	Service::$formatMap = array(
