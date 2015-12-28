@@ -28,20 +28,26 @@
 	 * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 	 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	 * 
-	 */			
-	
-	error_reporting(E_ALL);
-	ini_set('display_errors', 1);
-	date_default_timezone_set('UTC');
+	 */	
 	
 	require 'vendor/autoload.php';	
 	require 'system/Sensors.php';
 	require 'system/Service.php';
-	config('source', 'config.ini');	
-	
+	config('source', 'config.ini');
+    
+    date_default_timezone_set(config('timezone'));    
+    
+    if (config('debug') === 1) {
+        error_reporting(E_ALL);
+        ini_set('display_errors', 1);
+    } else {
+        error_reporting(0);
+    }    
+    
 	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.1');
 	
-	header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
+    if (config('expose') === 1)
+	   header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
 
 	// error handlers
 	error(500, function() { Service::showError(500); });
