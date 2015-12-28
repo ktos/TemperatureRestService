@@ -7,7 +7,7 @@ sensors.apikey = "abcdef" ; an APIKEY client must sent before data will be updat
 sensors.data = "./data" ; a folder where flat file about sensors are stored
 
 timezone = "UTC" ; default time zone
-expose = 0 ; should expose version in X-Powered-By
+expose = 1 ; should expose version in X-Powered-By
 debug = 1 ; display_errors and error_reporting to strict or not?
 
 ; "pullable sensors" configuration

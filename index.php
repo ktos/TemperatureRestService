@@ -37,7 +37,7 @@
     
     date_default_timezone_set(config('timezone'));    
     
-    if (config('debug') === 1) {
+    if (config('debug') == 1) {
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
     } else {
@@ -45,8 +45,8 @@
     }    
     
 	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.1');
-	
-    if (config('expose') === 1)
+	    
+    if (config('expose') == 1)
 	   header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
 
 	// error handlers

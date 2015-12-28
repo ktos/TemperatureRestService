@@ -97,8 +97,8 @@
 				
 				// additional code fragments for specific response formats
 				// like WNS which requires additional headers sent
-				if (file_exists("./system/$format.php"))
-					include "./system/$format.php";							
+				if (file_exists("./plugins/format/$format.php"))
+					include "./plugins/format/$format.php";
 				
 				// handling sensortype-specific view formats
 				$view = "data-$format";								
