@@ -22,6 +22,7 @@
 		 */
 		public static function putSensor($sensorName)
 		{
+            Plugins::run('pre-putsensor', $sensorName);
 			$s = new Sensors();
 			
 			$sensorData = json_decode(file_get_contents('php://input'), TRUE);
@@ -64,6 +65,8 @@
 				render("error-$formatExt", array('code' => 201, 'message' => 'Created', 'message2' => 'Sensor data has been created (or updated) sucessfully.'), $format === 'text/html'? null : FALSE );
 				
 			}
+            
+            Plugins::run('post-putsensor', $sensorData);
 			
 		}		
 						
@@ -80,6 +83,7 @@
 		 */
 		public static function getSensorData($sensorName, $format)
 		{
+            Plugins::run('pre-getsensor', $sensorName, $format);
 			$s = new Sensors();
 			$i = $s->getSensorData($sensorName);
 			
@@ -89,13 +93,16 @@
 						error(500, 'Internal Server Error');
 					}
 				}
+                                
+                if (!in_array($format, self::availableFormatsExtensions()))
+                    error(406, 'Not Acceptable');                
 				
 				header('Content-Type: ' . self::extensionToFormat($format));
 				
 				// additional code fragments for specific response formats
 				// like WNS which requires additional headers sent
-				if (file_exists("./system/$format.php"))
-					include "./system/$format.php";							
+				if (file_exists("./plugins/format/$format.php"))
+					include "./plugins/format/$format.php";
 				
 				// handling sensortype-specific view formats
 				$view = "data-$format";								
@@ -112,7 +119,7 @@
 					
 					if (file_exists(config('dispatch.views') . "/name/$sn-$format.html.php"))
 						$view = "name/$sn-$format";
-				}
+				}                               
 				
 				if ($format === 'html')
 					render($view, $i);
@@ -122,6 +129,8 @@
 			} else {
 				error(404, 'Not found');
 			}
+            
+            Plugins::run('post-getsensor', $sensorName, $format);
 		}
 		
 		/**
@@ -132,6 +141,7 @@
 		 * @param int $errorCode Code error. Supported are 400, 401, 404 and 500.
 		 */
 		public static function showError($errorCode) {
+            Plugins::run('pre-showerror', $errorCode);
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
 			if (array_key_exists("HTTP_ACCEPT", $_SERVER))
@@ -151,7 +161,8 @@
 				case 404: { $data = array('code' => 404, 'message' => 'File Not Found', 'message2' => 'Specified sensor cannot be found (or wrong path)!'); break; }				
 				case 400: { $data = array('code' => 400, 'message' => 'Bad request', 'message2' => 'Only JSON-encoded data is supported, name and data are required parameters.'); break; }
 				case 401: { $data = array('code' => 401, 'message' => 'Unauthorized', 'message2' => 'You haven\'t sent APIKEY variable in your JSON data or the APIKEY is not valid.'); break; }
-				
+				case 406: { $data = array('code' => 406, 'message' => 'Not Acceptable', 'message2' => 'There is no data in format requested.'); break; }
+                
 				default: { error(500, 'Internal Server Error'); }
 			}
 			
@@ -161,8 +172,22 @@
 			else {
 				render("error-$formatExt", $data, FALSE);
 			}
+            
+            Plugins::run('post-showerror', $errorCode);
 		}
 		
+        /**
+         * Building format map from a configuration file
+         */
+        public static function buildFormatMap()
+        {
+            $fm = explode(',', config('formats'));
+            
+            foreach ($fm as $f) {
+                self::$formatMap[config('formats.' . $f)] = $f;
+            }
+        }
+        
 		/**
 		 * A map with every possible format supported in style of content-type/format extension
 		 */
@@ -216,11 +241,13 @@
 		public static function avaliableFormats() {			
 			return array_keys(Service::$formatMap);
 		}
+        
+        /**
+         * Returns a list of all available available extensions
+         *
+         * @return array
+         */
+        public static function availableFormatsExtensions() {
+            return array_values(Service::$formatMap);
+        }
 	}
-
-	Service::$formatMap = array(
-		'text/html' => 'html',
-		'text/plain' => 'txt',
-		'application/json' => 'json',
-		'application/xml' => 'wns'
-	);

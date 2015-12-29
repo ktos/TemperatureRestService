@@ -1,4 +1,4 @@
-; TemperatureRestService 2.0 configuration
+; TemperatureRestService 2.x configuration
 
 dispatch.url = "" ; full URL for application, so dispatcher can work
 dispatch.views = "./views" ; a folder where are views
@@ -6,6 +6,18 @@ dispatch.views = "./views" ; a folder where are views
 sensors.apikey = "abcdef" ; an APIKEY client must sent before data will be updated
 sensors.data = "./data" ; a folder where flat file about sensors are stored
 
+timezone = "UTC" ; default time zone
+expose = 1 ; should expose version in X-Powered-By
+debug = 1 ; display_errors and error_reporting to strict or not?
+
+; configuration of possible data formats
+formats = "html,json,txt,wns" ; list of possible formats, separated by colon
+formats.html = "text/html" ; MIME type for format HTML
+formats.json = "application/json"
+formats.txt = "text/plain"
+formats.wns = "application/xml"
+
+; "pullable sensors" configuration
 sensors.pull.allowcmd = false ; should we allow running whatever is in "pull" field as a shell_exec?
 sensors.pull.interval = 1800 ; interval (in seconds) how much must be difference between lastupdated and current time to execute pull command/url
 ; pull will be disabled if not set
