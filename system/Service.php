@@ -87,6 +87,9 @@
 			$s = new Sensors();
 			$i = $s->getSensorData($sensorName);
 			
+            if ($i === FALSE && $s->findSensor($sensorName) !== FALSE)
+                error(500, 'Internal Server Error');
+            
 			if ($i !== FALSE) {
 				if (array_key_exists('status', $i)) {
 					if ((bool)$i['status'] === FALSE) {
