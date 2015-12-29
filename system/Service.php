@@ -167,6 +167,18 @@
 			}
 		}
 		
+        /**
+         * Building format map from a configuration file
+         */
+        public static function buildFormatMap()
+        {
+            $fm = explode(',', config('formats'));
+            
+            foreach ($fm as $f) {
+                self::$formatMap[config('formats.' . $f)] = $f;
+            }
+        }
+        
 		/**
 		 * A map with every possible format supported in style of content-type/format extension
 		 */
@@ -230,10 +242,3 @@
             return array_values(Service::$formatMap);
         }
 	}
-
-	Service::$formatMap = array(
-		'text/html' => 'html',
-		'text/plain' => 'txt',
-		'application/json' => 'json',
-		'application/xml' => 'wns'
-	);

@@ -35,7 +35,7 @@
 	require 'system/Service.php';
 	config('source', 'config.ini');
     
-    date_default_timezone_set(config('timezone'));    
+    date_default_timezone_set(config('timezone'));       
     
     if (config('debug') == 1) {
         error_reporting(E_ALL);
@@ -48,6 +48,9 @@
 	    
     if (config('expose') == 1)
 	   header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
+
+    // build format map from config file
+    Service::buildFormatMap();
 
 	// error handlers
 	error(500, function() { Service::showError(500); });
