@@ -45,12 +45,14 @@
 		 * @return array
 		 */
 		public function getSensorData($sensorName) {
+            Plugins::run('pre-getsensordata', $sensorName);
+            
 			$s = $this->readSensor($sensorName);
-			if ($s !== FALSE) {								
+			if ($s !== FALSE) {
 				// if there is "pull" parameter specified, run pull logic
 				if (array_key_exists('pull', $s)) {					
 					if (file_exists('plugins/pullable.php'))
-                        require 'plugins/pullable.php';
+                        include 'plugins/pullable.php';
 				}
 				
 				// if there is datatype specified, convert data to proper data type
@@ -62,8 +64,10 @@
 					}
 				}
 				
+                Plugins::run('post-getsensordata', $s);
 				return $s;
 			} else {
+                Plugins::run('post-getsensordata-error');
 				return FALSE;
 			}
 		}	
@@ -75,10 +79,12 @@
 		 * @return bool Returns if write succeeded
 		 */
 		private function writeSensorData($sensorData) {
+            Plugins::run('pre-writesensordata', $sensorData);
 			unset($sensorData['apikey']);
 				
 			$file = json_encode($sensorData, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT);
 			
+            Plugins::run('post-writesensordata', $sensorData);
 			return (file_put_contents(config('sensors.data') . "/$sensorData[name].json", $file) !== FALSE);
 		}
 		
@@ -90,9 +96,11 @@
 		 * @return bool
 		 */
 		public function createSensor($sensorData) {
+            Plugins::run('pre-createsensor', $sensorData);
 			if ($this->findSensor($sensorData['name']))
 				return FALSE;
-				
+			
+            Plugins::run('post-createsensor', $sensorData);
 			return $this->writeSensorData($sensorData);
 		}
 		
@@ -104,6 +112,7 @@
 		 * @return bool
 		 */
 		public function updateSensor($sensorName, $sensorData) {
+            Plugins::run('pre-updatesensor', $sensorName, $sensorData);
 			$sensorDataOld = $this->readSensor($sensorName);
 			if ($sensorDataOld === FALSE)
 				return FALSE;
@@ -117,6 +126,7 @@
 			$sensorDataOld['name'] = $sensorName;
 			$sensorDataOld['lastupdated'] = time();
 			
+            Plugins::run('post-createsensor', $sensorName, $sensorData);
 			return $this->writeSensorData($sensorDataOld);
 		}
 	

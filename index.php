@@ -33,6 +33,7 @@
 	require 'vendor/autoload.php';	
 	require 'system/Sensors.php';
 	require 'system/Service.php';
+    require 'system/Plugins.php';
 	config('source', 'config.ini');
     
     date_default_timezone_set(config('timezone'));       

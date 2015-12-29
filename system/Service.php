@@ -22,6 +22,7 @@
 		 */
 		public static function putSensor($sensorName)
 		{
+            Plugins::run('pre-putsensor', $sensorName);
 			$s = new Sensors();
 			
 			$sensorData = json_decode(file_get_contents('php://input'), TRUE);
@@ -64,6 +65,8 @@
 				render("error-$formatExt", array('code' => 201, 'message' => 'Created', 'message2' => 'Sensor data has been created (or updated) sucessfully.'), $format === 'text/html'? null : FALSE );
 				
 			}
+            
+            Plugins::run('post-putsensor', $sensorData);
 			
 		}		
 						
@@ -79,7 +82,8 @@
 		 * @param string $format A requested format of data. Not checked, must be in @see formatMap!
 		 */
 		public static function getSensorData($sensorName, $format)
-		{           
+		{
+            Plugins::run('pre-getsensor', $sensorName, $format);
 			$s = new Sensors();
 			$i = $s->getSensorData($sensorName);
 			
@@ -125,6 +129,8 @@
 			} else {
 				error(404, 'Not found');
 			}
+            
+            Plugins::run('post-getsensor', $sensorName, $format);
 		}
 		
 		/**
@@ -135,6 +141,7 @@
 		 * @param int $errorCode Code error. Supported are 400, 401, 404 and 500.
 		 */
 		public static function showError($errorCode) {
+            Plugins::run('pre-showerror', $errorCode);
 			$negotiator = new \Negotiation\FormatNegotiator();
 			
 			if (array_key_exists("HTTP_ACCEPT", $_SERVER))
@@ -165,6 +172,8 @@
 			else {
 				render("error-$formatExt", $data, FALSE);
 			}
+            
+            Plugins::run('post-showerror', $errorCode);
 		}
 		
         /**
