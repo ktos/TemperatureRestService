@@ -5,6 +5,8 @@
 	 * It prepares specific for WNS HTTP headers
 	 */
 
-	header('X-WNS-Expires: ' . date(DATE_RFC850, strtotime("+30 min")));
+	date_default_timezone_set('UTC');	
+	header('X-WNS-Expires: ' . date(DATE_RFC850, strtotime("+30 min", $i['lastupdated'])));
 	header('Content-type: application/xml;encoding=utf-8');
+	date_default_timezone_set(config('timezone'));
 ?>

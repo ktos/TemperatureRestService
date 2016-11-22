@@ -36,7 +36,7 @@
     require 'system/Plugins.php';
 	config('source', 'config.ini');
     
-    date_default_timezone_set(config('timezone'));       
+    date_default_timezone_set(config('timezone'));
     
     if (config('debug') == 1) {
         error_reporting(E_ALL);
@@ -45,7 +45,7 @@
         error_reporting(0);
     }    
     
-	define('BASEVERSION', '2.1.1');
+	define('BASEVERSION', '2.1.2');
 	
 	if (config('gitversion') == 1) {
 		if (config('gitversion.file') == 1) {
