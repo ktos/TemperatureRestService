@@ -126,7 +126,7 @@
 			$sensorDataOld['name'] = $sensorName;
 			$sensorDataOld['lastupdated'] = time();
 			
-            Plugins::run('post-createsensor', $sensorName, $sensorData);
+            Plugins::run('post-updatesensor', $sensorName, $sensorData);
 			return $this->writeSensorData($sensorDataOld);
 		}
 	
