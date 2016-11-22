@@ -45,8 +45,19 @@
         error_reporting(0);
     }    
     
-	define('TEMPERATURERESTSERVICE', 'TemperatureRestService/2.1');
-	    
+	define('BASEVERSION', '2.1.1');
+	
+	if (config('gitversion') == 1) {
+		if (config('gitversion.file') == 1) {
+			$version[0] = file_get_contents('gitversion.txt');
+		} else {		
+			exec('git describe --always', $version);
+		}		
+		define('TEMPERATURERESTSERVICE', 'TemperatureRestService/' . BASEVERSION . "+$version[0]");
+	} else {
+		define('TEMPERATURERESTSERVICE', 'TemperatureRestService/' . BASEVERSION);
+	}
+
     if (config('expose') == 1)
 	   header('X-Powered-By: ' . TEMPERATURERESTSERVICE);
 
